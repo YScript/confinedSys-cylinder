@@ -25,12 +25,12 @@ module globalparameters
 	integer,parameter::g_typeA = 1,g_typeB = 2,g_typeS=3,g_typeW= 4
 	integer(kind=4)::g_num_chains
 	integer(kind=8)::iseed
-	real(kind=8)::var_e,init_e,deta_e
+	real(kind=8)::g_config_e,g_var_e
 
 	real(kind=4),dimension(:,:)::eab(4,4)
 	integer(kind=4),allocatable,dimension(:,:)::box,atom,id_of_neigh,nchain
 	integer(kind=4),dimension(:,:)::neighbours(g_num_neighbours,3)
-	integer(kind=4),allocatable,dimension(:)::num_neigh,icha,ichap
+	integer(kind=4),allocatable,dimension(:)::num_neigh,icha,ichatmp,solvents2Position,position2Solvents
 end module globalparameters
 
 program main
@@ -68,9 +68,11 @@ program main
 	config_e = configE_calculating()
 	init_config_e = configE_calculating()
 	print*,'config_e after remove chains/-the initial config_e:',config_e,init_config_e
+	
+	call count_num_solvents()
+	call tempType_init()
 	call cpu_time(time_toc0)
 	print*,'The total time on the initialization process:',time_toc0 - time_tic
-
 	!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!
 	!	the following partion is the simulated Annealing partion    !
 	call simulatedAnnealing_plan(init_config_e,g_init_temp,g_annealing_steps)
@@ -110,8 +112,8 @@ subroutine simulatedAnnealing_plan(init_config_e,init_temp,annealing_steps)
 		sum_config_e = 0
 
 		standard_MCS_loop:do mcs = 1, standard_MCS, 1
-			g_num_atom_loop:do order = 1, g_num_atom, 1
-				call chains_reseveral(current_configE,changed_configE,num_trial_steps,num_accepted_steps)
+			g_num_atom_loop:do order = 1, 2, 1
+				call chains_reversing(current_configE,changed_configE,num_trial_steps,num_accepted_steps)
 				call chains_snake(current_configE,changed_configE,num_trial_steps,num_accepted_steps)
 			end do g_num_atom_loop
 		end do standard_MCS_loop
@@ -123,27 +125,57 @@ subroutine simulatedAnnealing_plan(init_config_e,init_temp,annealing_steps)
 	end do	main_annealing_plan
 end subroutine simulatedAnnealing_plan
 
-subroutine movingAtom_chosen()
-	! choose an atom to moving;
+subroutine chains_reversing(init_config_e,deta_config_e,num_trial_steps,num_accepted_steps)
+	!	chains reversig motion;
 	use globalparameters
 	implicit none
-	integer(kind=4)::selected_move_atom
-end subroutine movingAtom_chosen
-
-subroutine chains_reseveral(init_config_e,changed_config_e,num_trial_steps,num_accepted_steps)
-	!	chains reseveral motion;
-	use globalparameters
-	implicit none
-	real(kind=8),intent(inout)::init_config_e,changed_config_e
+	real(kind=8),intent(inout)::init_config_e,deta_config_e
 	integer(kind=8),intent(inout)::num_trial_steps,num_accepted_steps
-	real(kind=8)::ranf
-	real(kind=8)::possibility
+	integer(kind=4)::moveChains_chosen
+	integer(kind=4)::half_copolymer,len_ASegment,len_BSegment,len_copolymer
+	integer(kind=4)::atom_A_Position,atom_B_Position,neighs_of_A,neighs_of_B
+	real(kind=8)::possibility,config_e
 
-	possibility = 
-	changed_config_e = 0
-	if ( changed_config_e .le. 0.0)then
+	real(kind=8)::ranf
+
+	len_ASegment = g_len_ASegment
+	len_BSegment = g_len_BSegment
+	len_copolymer = len_ASegment + len_BSegment
+	half_copolymer = int(len_copolymer/2)
+	moveChains_chosen = int(1.0+g_num_chains*ranf())
+	
+	!print*,'hello world'
+
+	do i = 1, len_BSegment, 1
+		atom_A_Position = i
+		atom_B_Position = i + len_ASegment
+		ichatmp(nchain(moveChains_chosen,atom_A_Position)) = g_typeB
+		ichatmp(nchain(moveChains_chosen,atom_B_Position)) = g_typeA
+	end do
+
+	config_e = init_config_e
+	deta_config_e = 0
+
+	outer:do i = 1, len_BSegment, 1
+		atom_A_Position = i
+		atom_B_Position = i + len_ASegment
+		
+		inner:do j = 1, g_num_neighbours, 1
+			neighs_of_A = id_of_neigh(nchain(moveChains_chosen,atom_A_Position),j)
+			neighs_of_B = id_of_neigh(nchain(moveChains_chosen,atom_B_Position),j)
+			deta_config_e = deta_config_e+ eab(g_typeB,ichatmp(neighs_of_A)) -eab(g_typeA,icha(neighs_of_A))
+			deta_config_e = deta_config_e+ eab(g_typeA,ichatmp(neighs_of_B)) -eab(g_typeB,icha(neighs_of_B))
+			!	record the neighbours of atom A as 'neighs_of_A',so as to atom B;
+			!	record the changed config_e of remove an A by B as a assume;
+			!	so do it by remove the B atom;
+		end do inner
+	end do outer
+
+	if ( deta_config_e .le. 0.0)then
 		num_accepted_steps = num_accepted_steps + 1
-	else if ( changed_config_e .gt. 0.0)then
+		call chaRev_pro() ! call the process of the exchange of each pair of atoms
+		config_e = config_e + deta_config_e
+	else if ( deta_config_e .gt. 0.0)then
 
 		if ( possibility .ge. ranf() ) then
 			num_accepted_steps = num_accepted_steps + 1
@@ -152,7 +184,20 @@ subroutine chains_reseveral(init_config_e,changed_config_e,num_trial_steps,num_a
 	else
 	endif
 	num_trial_steps = num_trial_steps + 1
-end subroutine chains_reseveral
+
+	g_config_e = config_e
+	g_var_e = deta_config_e
+
+end subroutine chains_reversing
+
+
+
+subroutine movingAtom_chosen()
+	! choose an atom to moving;
+	use globalparameters
+	implicit none
+	integer(kind=4)::selected_move_atom
+end subroutine movingAtom_chosen
 
 subroutine chains_snake(init_config_e,changed_config_e,num_trial_steps,num_accepted_steps)
 	!	chains_snake moving;
@@ -164,6 +209,41 @@ subroutine chains_snake(init_config_e,changed_config_e,num_trial_steps,num_accep
 	num_trial_steps = num_trial_steps + 1
 	num_accepted_steps = num_accepted_steps + 1
 end subroutine chains_snake
+
+subroutine tempType_init()
+	!	the initialization of temporary array of particles type 
+	use globalparameters
+	implicit none
+	integer(kind=4)::err
+	allocate(ichatmp(g_total_parti), stat=err)
+	if (err /= 0) print *, "ichatmp: Allocation request denied"
+	
+	do i = 1, g_total_parti, 1
+		ichatmp(i) = icha(i)
+	end do
+end subroutine tempType_init
+
+subroutine count_num_solvents()
+	!	its the counter of number of solvents;
+	use globalparameters
+	implicit none
+	integer(kind=4)::counter,err
+	counter = 0
+	allocate(solvents2Position(g_num_atom), stat=err)
+	if (err /= 0) print *, "solvents2Position: Allocation request denied"
+	
+	allocate(position2Solvents(g_num_atom), stat=err)
+	if (err /= 0) print *, "position2Solvents: Allocation request denied"
+	
+	do i = 1, g_num_atom, 1
+		if ( icha(i) .eq. g_typeS )then
+			counter = counter + 1
+			solvents2Position(counter) = i
+			position2Solvents(i) = counter
+		else
+		endif
+	end do
+end subroutine count_num_solvents
 
 subroutine chains_remove_pro(len_ASegment,len_BSegment,concentration)
 	!	remove the chains after initial configuration;
@@ -349,6 +429,7 @@ subroutine Parti_coor_init()
 	call confined_system_init(r0,dwall,height_of_cylinder)
 	num_atom = g_num_atom
 	num_cylinder = g_total_parti
+
 	num_neighbours = g_num_neighbours
 	len_near_points = g_len_near_points
 	!print*,num_atom,num_cylinder,num_neighbours,len_near_points
@@ -517,10 +598,12 @@ subroutine find_id_of_neigh_met1(num_atom,num_cylinder)
  	!	testing
  	do i = 1, num_atom, 1
  		if ( num_neigh(i) .ne. g_num_neighbours) then
- 			print*,'hello world'
+ 			!print*,'hello world'
+ 			goto 1001
  		else
  		endif
  	end do
+ 1001	print*,'error in find_id_of_neigh_met1'
 end subroutine find_id_of_neigh_met1
 
 subroutine find_id_of_neigh_met2(num_atom,num_cylinder)
@@ -557,10 +640,12 @@ subroutine find_id_of_neigh_met2(num_atom,num_cylinder)
 	!	testing
 	do i = 1, num_atom, 1
  		if ( num_neigh(i) .ne. g_num_neighbours) then
- 			print*,'hello world'
+ 			!print*,'hello world'
+ 			goto 1002
  		else
  		endif
  	end do
+ 1002 print*,'error in find_id_of_neigh_met2'	
 end subroutine find_id_of_neigh_met2
 
 subroutine figure(step)
