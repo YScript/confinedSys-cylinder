@@ -12,7 +12,7 @@
 	double precision::concentration,r0,r1,dwall
 	real(kind=4):: time_tic,time_toc,time_toc1,time_toc2,time_toc3
 
-	concentration=0.600
+	concentration=0.1500
 
 	OPEN (UNIT=2,FILE='atom.txt')
 	OPEN (UNIT=3,FILE='chain.txt')  
