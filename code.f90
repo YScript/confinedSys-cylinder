@@ -13,17 +13,17 @@ module globalparameters
 	real(kind=8),parameter::g_eas = -1.0,g_eaw = -1.0,g_ebs = 1.0,g_ebw= 1.0
 	real(kind=8),parameter::g_init_temp = 30
 	integer(kind=4),parameter::g_annealing_steps = 60
-	integer(kind=8),parameter::g_standard_MCS = 2 !5000
+	integer(kind=8),parameter::g_standard_MCS = 5 !5000
 
 	integer(kind=4),parameter::g_lx = 60, g_ly = 60, g_lz = 60
 	integer(kind=4),parameter::g_lxyz = g_lx*g_ly*g_lz
-	integer(kind=4)::g_num_box,g_num_atom,g_total_parti,g_num_chains
+	integer(kind=4)::g_num_box,g_num_atom,g_total_parti,g_num_chains,g_num_solvents
 	real(kind=4),parameter::g_len_near_points = 2.5
 	integer(kind=4),parameter::g_num_neighbours = 18
 	integer,parameter::g_typeA = 1,g_typeB = 2,g_typeS=3,g_typeW= 4
 	integer(kind=8)::g_num_accepted_steps,g_num_trial_steps
 	integer(kind=8)::iseed
-	real(kind=8)::g_config_e,g_var_e,g_sum_confe_PerTemper
+	real(kind=8)::g_config_e,g_sum_var_e,g_sum_confe_PerTemper
 
 	real(kind=8),dimension(:,:)::eab(4,4)
 	integer(kind=4),allocatable,dimension(:,:)::box,atom,id_of_neigh,nchain
@@ -74,6 +74,7 @@ program main
 	print*,'The total time on the initialization process:',time_toc0 - time_tic
 	!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!
 	!	the following partion is the simulated Annealing partion    !
+	print*,'_____________________________________________________________________________________________'
 	call simulatedAnnealing_plan(init_config_e,g_init_temp,g_annealing_steps)
 	call cpu_time(time_toc1)
 	print*,'The total time on the program main:',time_toc1- time_tic
@@ -91,16 +92,19 @@ subroutine simulatedAnnealing_plan(init_config_e,init_temp,annealing_steps)
 	integer(kind=8)::mcs,order,standard_MCS,num_trial_steps,num_accepted_steps
 	real(kind=8)::configE_average_before,configE_average_current,ep
 	real(kind=8)::current_configE,changed_configE
+	real(kind=8)::configE_calculating
 
 	annealing_temp = init_temp
 	standard_MCS = g_standard_MCS
 	configE_average_before = 10000000.0
+	!___________________________________________
 	current_configE = init_config_e
 	changed_configE = 0.0
+	g_config_e = init_config_e
 	configE_average_current = init_config_e
-	g_var_e = 0.00
-
-	main_annealing_plan:do step = 1, annealing_steps, 1	
+	print*,'test floating-point exceptions'
+	
+	main_annealing_plan:do step = 1, annealing_steps, 1		
 		if ( (configE_average_before - configE_average_current) .gt. 500 ) then
 			annealing_temp = annealing_temp * 0.95
 		else
@@ -108,23 +112,22 @@ subroutine simulatedAnnealing_plan(init_config_e,init_temp,annealing_steps)
 		endif
 
 		annealing_factor = 1.0/ annealing_temp
-		num_trial_steps = 0
-		num_accepted_steps = 0
+		g_num_trial_steps = 0
+		g_num_accepted_steps = 0
 		ep = 0.0
+		g_sum_var_e = 0.0
 		g_sum_confe_PerTemper = 0.00
 
 		standard_MCS_loop:do mcs = 1, standard_MCS, 1
 			g_num_atom_loop:do order = 1, 2, 1
-				
-				call chains_reversing(annealing_factor,current_configE,num_trial_steps,num_accepted_steps)
+
 				current_configE = g_config_e
-				num_accepted_steps = g_num_accepted_steps
-				num_trial_steps = g_num_trial_steps
-				
-				call chains_snake(annealing_factor,current_configE,num_trial_steps,num_accepted_steps)
+				call chains_reversing(annealing_factor,current_configE)
+				g_num_trial_steps = g_num_trial_steps + 1
+
 				current_configE = g_config_e
-				num_accepted_steps = g_num_accepted_steps
-				num_trial_steps = g_num_trial_steps
+				call chains_snake(annealing_factor,current_configE,g_concentration)
+				g_num_trial_steps = g_num_trial_steps + 1
 
 			end do g_num_atom_loop
 		end do standard_MCS_loop
@@ -132,24 +135,30 @@ subroutine simulatedAnnealing_plan(init_config_e,init_temp,annealing_steps)
 		call figure(step)
 
 		configE_average_before = configE_average_current
-		configE_average_current = g_sum_confe_PerTemper/(num_accepted_steps)
-		print*,'g_config_e:',current_configE
+ 		!configE_average_current = g_sum_confe_PerTemper/(g_num_accepted_steps)
+		configE_average_current = g_sum_confe_PerTemper/(g_num_trial_steps)
+
+ 		write(*,*)step,g_num_accepted_steps,g_num_trial_steps,g_sum_var_e,g_config_e
+
+ 		
 	end do	main_annealing_plan
+	print*,'last g_config_e',configE_calculating()
 end subroutine simulatedAnnealing_plan
 
-subroutine chains_reversing(annealing_factor,init_config_e,num_trial_steps,num_accepted_steps)
+subroutine chains_reversing(annealing_factor,init_config_e)
 	!	chains reversig motion;
+	!	delete the dummy variables of deta_config_e, num_trial_steps,num_accepted_steps
+	!	set them as a globalparameters;
 	use globalparameters
 	implicit none
-	real(kind=8),intent(inout)::init_config_e,annealing_factor
-	integer(kind=8),intent(inout)::num_trial_steps,num_accepted_steps
+	real(kind=8),intent(in)::init_config_e,annealing_factor
 	integer(kind=4)::moveChains_chosen
 	integer(kind=4)::half_copolymer,len_ASegment,len_BSegment,len_copolymer
 	integer(kind=4)::atom_X_position,atom_Y_position,neighs_of_A,neighs_of_B
 	real(kind=8)::possibility,config_e,deta_config_e
-
 	real(kind=8)::ranf
 
+	config_e = init_config_e
 	len_ASegment = g_len_ASegment
 	len_BSegment = g_len_BSegment
 	len_copolymer = len_ASegment + len_BSegment
@@ -162,7 +171,6 @@ subroutine chains_reversing(annealing_factor,init_config_e,num_trial_steps,num_a
 		ichatmp(nchain(moveChains_chosen,atom_X_position)) = g_typeB
 		ichatmp(nchain(moveChains_chosen,atom_Y_position)) = g_typeA
 	end do
-	config_e = init_config_e
 	deta_config_e = 0.000
 	outer:do i = 1, len_BSegment, 1
 		atom_X_position = i
@@ -182,14 +190,13 @@ subroutine chains_reversing(annealing_factor,init_config_e,num_trial_steps,num_a
 	!	Note: The following floating-point exceptions are signalling: IEEE_DENORMAL
 	!	because the float precision of config_e & possibility is real(kind=8),not .eq. 0.0 and ranf()
 	if ( deta_config_e .le. 0.0)then
-		num_accepted_steps = num_accepted_steps + 1
+		g_num_accepted_steps = g_num_accepted_steps + 1
 		config_e = config_e + deta_config_e
-		call chaRev_pro(moveChains_chosen,len_ASegment,len_BSegment) ! call the process of the exchange of each pair of atoms
-		
+		call chaRev_pro(moveChains_chosen,len_ASegment,len_BSegment) ! call the process of the exchange of each pair of atoms	
 	else if ( deta_config_e .gt. 0.0)then
 		possibility = exp(-deta_config_e *annealing_factor )
 		if ( possibility .ge. ranf() ) then
-			num_accepted_steps = num_accepted_steps + 1
+			g_num_accepted_steps = g_num_accepted_steps + 1
 			config_e = config_e + deta_config_e
 			call chaRev_pro(moveChains_chosen,len_ASegment,len_BSegment)
 		else
@@ -202,11 +209,10 @@ subroutine chains_reversing(annealing_factor,init_config_e,num_trial_steps,num_a
 		endif	
 	else 	!the else belong the outer if statement
 	endif	!the endif belong the outer if statement
-
-	num_trial_steps = num_trial_steps + 1
-	g_sum_confe_PerTemper = config_e + g_sum_confe_PerTemper
-	g_config_e = config_e
-	g_var_e = g_var_e + deta_config_e
+	g_sum_confe_PerTemper = g_sum_confe_PerTemper + config_e
+	g_config_e = config_e 		! return current configuration Energy;
+	!	return tge g_sum_var_e as the deta_config_e;
+	g_sum_var_e = g_sum_var_e + deta_config_e 
 end subroutine chains_reversing
 
 subroutine chaRev_pro(moveChains_chosen,len_ASegment,len_BSegment)
@@ -221,7 +227,7 @@ subroutine chaRev_pro(moveChains_chosen,len_ASegment,len_BSegment)
 
 	do i = 1, len_BSegment, 1
 		atom_X_position = i 
-		atom_Y_position = i + len_BSegment
+		atom_Y_position = i + len_ASegment
 		icha(nchain(moveChains_chosen,atom_X_position)) = g_typeB
 		icha(nchain(moveChains_chosen,atom_Y_position)) = g_typeA
 
@@ -248,23 +254,38 @@ subroutine chaRev_pro(moveChains_chosen,len_ASegment,len_BSegment)
 	end do
 end subroutine chaRev_pro
 
-subroutine movingAtom_chosen()
-	! choose an atom to moving;
-	use globalparameters
-	implicit none
-	integer(kind=4)::selected_move_atom
-end subroutine movingAtom_chosen
 
-subroutine chains_snake(annealing_factor,init_config_e,num_trial_steps,num_accepted_steps)
+
+subroutine chains_snake(annealing_factor,init_config_e,concentration)
 	!	chains_snake moving;
 	use globalparameters
 	implicit none
-	real(kind=8),intent(inout)::init_config_e,annealing_factor
-	integer(kind=8),intent(inout)::num_trial_steps,num_accepted_steps
-	call movingAtom_chosen()
-	num_trial_steps = num_trial_steps + 1
-	num_accepted_steps = num_accepted_steps + 1
+	real(kind=8),intent(in)::annealing_factor,init_config_e,concentration
+	! 	call movingAtom_chosen(concentration)
+	integer(kind=4)::len_copolymer
+	integer(kind=4)::moveChains_chosen,Monomer_order,neigh_order
+	integer(kind=4)::selectedSolvents_chosen
+	integer(kind=4)::id_moveAtom,id_neigh_of_moveAtom,id_of_solvent
+	real(kind=8)::ranf
+	len_copolymer = g_len_ASegment + g_len_BSegment
+	neigh_order = int(1.0+g_num_neighbours*ranf())
+	! unit the variables of id_moveAtom and id_neigh_of_moveAtom;
+	if ( concentration .ge.0.500 ) then
+		moveChains_chosen = int(1.0+g_num_chains*ranf())
+		Monomer_order = int(1.0+len_copolymer*ranf())
+		id_moveAtom = nchain(moveChains_chosen,Monomer_order)
+		id_neigh_of_moveAtom = id_of_neigh(id_moveAtom,neigh_order)
+	else
+		selectedSolvents_chosen = int(1.0+g_num_solvents*ranf())
+		id_of_solvent = solvents2Position(selectedSolvents_chosen)
+		id_neigh_of_moveAtom = selectedSolvents_chosen
+		id_moveAtom = id_of_neigh(id_of_solvent,neigh_order)
+	endif
 end subroutine chains_snake
+
+
+
+
 
 subroutine tempType_init()
 	!	the initialization of temporary array of particles type 
@@ -299,6 +320,8 @@ subroutine count_num_solvents()
 		else
 		endif
 	end do
+	g_num_solvents = counter
+	print*,'number of solvents:',g_num_solvents
 end subroutine count_num_solvents
 
 subroutine chains_remove_pro(len_ASegment,len_BSegment,concentration)
@@ -370,7 +393,7 @@ subroutine chains_remove_pro(len_ASegment,len_BSegment,concentration)
 		end do inner
 	end do outer
 	print*,'end subroutine chains_remove_pro()'
-end subroutine chains_remove_pro
+end subroutine chains_remove_pro                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
 
 subroutine AB_diblock_copolymer_init(len_ASegment,len_BSegment)
 	!	subroutine to initialise the AB BCP chains;

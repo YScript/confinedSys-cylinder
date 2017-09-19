@@ -12,7 +12,9 @@
 	double precision::concentration,r0,r1,dwall
 	real(kind=4):: time_tic,time_toc,time_toc1,time_toc2,time_toc3
 
-	concentration=0.1500
+	! 	concentration=0.34480 float-point exception
+! 	concentration = 0.1500
+ 	concentration = 0.500
 
 	OPEN (UNIT=2,FILE='atom.txt')
 	OPEN (UNIT=3,FILE='chain.txt')  
@@ -152,20 +154,18 @@ write(*,*) 'after0'
  !  pause
     do 7 i1=1,ntot
        icha(i1)=3
-      7 continue
-     do 8 i2=ntot+1,k1
+    7 continue
+    do 8 i2=ntot+1,k1
         icha(i2)=4
-     8 continue
+    8 continue
     !write(*,*) 'after1'
 	k=int(zl/nnd)
-	ntotc=(ntot*k)/zl
-		   
-	 nntotc=(ntot*concentration)/nnd
+	ntotc=int(ntot/zl)*k
+	nntotc=int(ntot*concentration/nnd)
 
-  nndx=nnd-nnd1
-  nndxp=int(nnd/2)
-      nx=0
-
+  	nndx=nnd-nnd1
+  	nndxp=int(nnd/2)
+    nx=0
 	i=1
 	do while(i.lt.ntot)
 		!write(*,*) k
@@ -208,7 +208,7 @@ write(*,*) 'after0'
 	!print*,'chains:',nchain(1,1),nchain(1,2),nchain(1,3),nchain(1,4)
 !------------------------------------------------
  	ntrnt=ntotc-nntotc
-   write (*,*)ntotc,ntrnt,nntotc
+   	write (*,*)ntotc,ntrnt,nntotc
 	j=1
 do 88 i=1,ntrnt
 	nn1=3
@@ -233,7 +233,7 @@ do 88 i=1,ntrnt
 88 continue
 
 	k=0
-   do 888 i=1,ntotc
+   	do 888 i=1,ntotc
 	   	nx=nchain(i,1)
 	   	nn1=icha(nx)
 	   	if(nn1.ne.3)then
@@ -250,497 +250,397 @@ do 88 i=1,ntrnt
 	999 continue
 888 continue
 
-   ntotc=nntotc
-   percent=float(ntotc*nnd)/ntot
- write(*,*)ntotc,percent 
- write(*,*)'after enddo 9'	
+   	ntotc=nntotc
+   	percent=float(ntotc*nnd)/ntot
+ 	write(*,*)ntotc,percent 
+ 	write(*,*)'after enddo 9'	
 	
 	i=0
     DO  900 kk=1,ntot
-     if(icha(kk).eq.3)then
-     i=i+1
-	 nempty(i)=kk
-		mne(kk)=i
- !    write(3,*)'i,nempty(i)=',i,kk,icha(kk)
-     else
-  	 endif
+     	if(icha(kk).eq.3)then
+     		i=i+1
+	 		nempty(i)=kk
+			mne(kk)=i
+ 		!    write(3,*)'i,nempty(i)=',i,kk,icha(kk)
+     	else
+  	 	endif
 900	continue
- ntote=i 
+ 	ntote=i 
  
- write(*,*) ntote
+ 	write(*,*) ntote
 
-e=0.
+	e=0.
 	do 118 ii=1,ntot
 		do 118 JJP=1,18
 			nnii=icha(nna(ii,JJP))
 		 	if(ICHA(Ii).lt.nnii)then	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
   				e=e+eab(icha(ii),nnii)
-			!elseif(icha(i1).eq.nnii)then
+				!	elseif(icha(i1).eq.nnii)then
 				!ee1=eab(icha(ii),nnii)/2 
 				!ee1=e+ee1
 			else
 		  	endif
-		e=e !+ee1
-  118   continue 
+			e=e !+ee1
+118 continue 
    	write(*,*)'e0=',e
 	do 18 i1=1,k1
-	
-	  ichaP(i1)=ICHA(I1)
-
-  18	   continue 
+		ichaP(i1)=ICHA(I1)
+18	continue 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  nnum=2
-        ep0=10000000.
-	      epp=e
-		 ! write(*,*) ntot
-		 !pause                                          
-		 cons1=30.
+    ep0=10000000.
+	epp=e
+	cons1=30.
 	
 	call cpu_time(time_tic)
-do 50 jj=1,60
-	if(ep0-epp.gt.500.)then
-	 cons1=cons1*.95
-	 else
-	  cons1=cons1*.92
-	  endif
-EP=0.
-do 5002 ii02=1,nnstep
- nrrend=0
- nmontes=0
-do 5003 ii03=1,ntot  	 
-	 cons=1./cons1
-	 	!do while1
-!	do while (nrrend.lt.nrrend0)
-    ncc=1
+	do 50 jj=1,60
+		if(ep0-epp.gt.500.)then
+	 		cons1=cons1*.95
+	 	else
+	  		cons1=cons1*.92
+	  	endif
+		EP=0.
+		do 5002 ii02=1,nnstep
+		 	nrrend=0
+		 	nmontes=0
+			do 5003 ii03=1,ntot  	 
+	 			cons=1./cons1
+    			ncc=1
 	  
-	    nnx=INT(1.0+ntotc*ranf(idum))
+	    		nnx=INT(1.0+ntotc*ranf(idum))
 		
-		do ii=1,nndx
-		nndxx=ii+nnd1
-		ichap(nchain(nnx,ii))=2
-		ichap(nchain(nnx,nndxx))=1
-        enddo
-	
-		de=0.
-	
-		do 13 ii=1,nndx
-		nndxx=ii+nnd1
-		do 14 kk=1,18
-		mii=nna(nchain(nnx,ii),kk)
-		mii1=nna(nchain(nnx,nndxx),kk)
-		de=de+eab(2,ichap(mii))-eab(1,icha(mii))		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
-   de=de+eab(1,ichap(mii1))-eab(2,icha(mii1))
-14   continue		
-  13   continue
+				do ii=1,nndx
+					nndxx=ii+nnd1
+					ichap(nchain(nnx,ii))=2
+					ichap(nchain(nnx,nndxx))=1
+		        enddo
+				de=0.
+				do 13 ii=1,nndx
+					nndxx=ii+nnd1
+					do 14 kk=1,18
+						mii=nna(nchain(nnx,ii),kk)
+						mii1=nna(nchain(nnx,nndxx),kk)
+						de=de+eab(2,ichap(mii))-eab(1,icha(mii))		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
+				   		de=de+eab(1,ichap(mii1))-eab(2,icha(mii1))
+				14   continue		
+		  13   	continue
 
-  if(de.le.0)then
- 
-     e=e+de	
-
-		do 122 ii=1,nndx
-		nndxx=ii+nnd1
-		icha(nchain(nnx,ii))=2
-		icha(nchain(nnx,nndxx))=1
-		
-122  continue		
-		do 111 ii=1,nndx
-		nndxx=ii+nnd1
-		nchax=nchain(nnx,ii)
-		nchain(nnx,ii)=nchain(nnx,nnd+1-ii)
-		nchain(nnx,nnd+1-ii)=nchax
-		mw(nchain(nnx,nnd+1-ii))=nnd+1-ii
-		mw(nchain(nnx,ii))=ii
-111  continue		
-	   do 133 ii=nndx+1,nndxp
-			 nchax=nchain(nnx,ii)
-			nchain(nnx,ii)=nchain(nnx,nnd-ii+1)
-			 nchain(nnx,nnd-ii+1)=nchax
-			 mw(nchain(nnx,nnd+1-ii))=nnd+1-ii
-     		mw(nchain(nnx,ii))=ii
-
-	  133 continue		
-	  
-	
-	  nmontes=nmontes+1
-	  else
-	  pp=exp(-de*cons)
-   
-	 if(pp.ge.ranf(idum))then
-	   e=e+de	
-
-	do 16 ii=1,nndx
-		nndxx=ii+nnd1
-		icha(nchain(nnx,ii))=2
-		icha(nchain(nnx,nndxx))=1
-		
-16  continue		
-		do 17 ii=1,nndx
-		nndxx=ii+nnd1
-		nchax=nchain(nnx,ii)
-		nchain(nnx,ii)=nchain(nnx,nnd+1-ii)
-		nchain(nnx,nnd+1-ii)=nchax
-		mw(nchain(nnx,nnd+1-ii))=nnd+1-ii
-		mw(nchain(nnx,ii))=ii
-
-17  continue		
-	  do 134 ii=nndx+1,nndxp
-			 nchax=nchain(nnx,ii)
-			nchain(nnx,ii)=nchain(nnx,nnd-ii+1)
-			 nchain(nnx,nnd-ii+1)=nchax
-			 mw(nchain(nnx,nnd+1-ii))=nnd+1-ii
-		mw(nchain(nnx,ii))=ii
-
-	  134 continue		
-
-	  nmontes=nmontes+1
-
-    else
-	do ii=1,nndx
-		nndxx=ii+nnd1
-		ichap(nchain(nnx,ii))=1
-		ichap(nchain(nnx,nndxx))=2
-        enddo
-    endif
-endif
-
- EP=EP+E
-
-	 nrrend=nrrend+1
+  				if(de.le.0)then
+	     			e=e+de	
+					do 122 ii=1,nndx
+							nndxx=ii+nnd1
+							icha(nchain(nnx,ii))=2
+							icha(nchain(nnx,nndxx))=1
+					122  continue		
+					do 111 ii=1,nndx
+							nndxx=ii+nnd1
+							nchax=nchain(nnx,ii)
+							nchain(nnx,ii)=nchain(nnx,nnd+1-ii)
+							nchain(nnx,nnd+1-ii)=nchax
+							mw(nchain(nnx,nnd+1-ii))=nnd+1-ii
+							mw(nchain(nnx,ii))=ii
+					111 continue		
+					do 133 ii=nndx+1,nndxp
+							nchax=nchain(nnx,ii)
+							nchain(nnx,ii)=nchain(nnx,nnd-ii+1)
+							nchain(nnx,nnd-ii+1)=nchax
+							mw(nchain(nnx,nnd+1-ii))=nnd+1-ii
+				     		mw(nchain(nnx,ii))=ii
+					133 continue		
+		  			nmontes=nmontes+1
+				else
+	  				pp=exp(-de*cons)
+				 	if(pp.ge.ranf(idum))then
+				   		e=e+de	
+						do 16 ii=1,nndx
+							nndxx=ii+nnd1
+							icha(nchain(nnx,ii))=2
+							icha(nchain(nnx,nndxx))=1
+					16  continue		
+						do 17 ii=1,nndx
+							nndxx=ii+nnd1
+							nchax=nchain(nnx,ii)
+							nchain(nnx,ii)=nchain(nnx,nnd+1-ii)
+							nchain(nnx,nnd+1-ii)=nchax
+							mw(nchain(nnx,nnd+1-ii))=nnd+1-ii
+							mw(nchain(nnx,ii))=ii
+					17  continue		
+				  		do 134 ii=nndx+1,nndxp
+							nchax=nchain(nnx,ii)
+							nchain(nnx,ii)=nchain(nnx,nnd-ii+1)
+							nchain(nnx,nnd-ii+1)=nchax
+							mw(nchain(nnx,nnd+1-ii))=nnd+1-ii
+							mw(nchain(nnx,ii))=ii
+				  	134 continue		
+	  				nmontes=nmontes+1
+   					else
+						do ii=1,nndx
+							nndxx=ii+nnd1
+							ichap(nchain(nnx,ii))=1
+							ichap(nchain(nnx,nndxx))=2
+				        enddo
+    				endif
+				endif
+		 		EP=EP+e
+				nrrend=nrrend+1
         
  	!! Chain movement  only need this part------------------------------------------------------------------------------------------------------------------------------
-	randNum=ranf(idum)
-if (randNum.ge.0.0.and.randNum.lt.0.50)then
+				randNum=ranf(idum)
+				if (randNum.ge.0.0.and.randNum.lt.0.50)then
+	 				nnx=INT(1.0+ntotc*ranf(idum))
+			 		nxx=INT(1.0+nnd*ranf(idum))
+				  	nx=nchain(nnx,nxx)
+		        	nx1=INT(1.0+18*ranf(idum))
+				  	nx2=nna(nx,nx1)
 
-	 nnx=INT(1.0+ntotc*ranf(idum))
-     
-	 
-	 nxx=INT(1.0+nnd*ranf(idum))
-		  nx=nchain(nnx,nxx)
-        nx1=INT(1.0+18*ranf(idum))
-
-		  nx2=nna(nx,nx1)
-!write(*,*) nnx,nxx,nx,nx1,nx2
-!pause
  
-  if(icha(nx2)==3 .or. icha(nx2)==7)then
-!	write(*,*) 'begin Chain movement'
- nny=mne(nx2)
-  ichg=1
+  					if((icha(nx2).eq.3) .or. (icha(nx2).eq.7))then
+						nny=mne(nx2)
+  						ichg=1
 !write(*,*)'nmontes=',nmontes,nxx,nx,nx1,nx2
-   if (nxx-1.eq.0)then
-   nstar=nxx+1
-    nend=nstar
-      else if(nxx.eq.nnd)then
-   nstar=nxx-1
-    nend=nstar
-   
-   else
-   nstar=nxx-1
-    nend=nxx+1
-   endif
+					   	if (nxx.eq.1)then
+						   	nstar=nxx+1
+						    nend=nstar
+						else if(nxx.eq.nnd)then
+						   	nstar=nxx-1
+						    nend=nstar
+					   	else
+						   	nstar=nxx-1
+						    nend=nxx+1
+					   	endif
  
-	do ii=nstar,nend,nnum
-
-	nni=nchain(nnx,ii)
-!		write(*,*)'ii,nni=',ii,nni
-		rrx=atom(nni,1)-atom(nx2,1)
-		rry=atom(nni,2)-atom(nx2,2)
-		rrz=atom(nni,3)-atom(nx2,3)
- 
-	rr=rrx*rrx+rry*rry+rrz*rrz
+						do ii=nstar,nend,nnum
+							nni=nchain(nnx,ii)
+							rrx=atom(nni,1)-atom(nx2,1)
+							rry=atom(nni,2)-atom(nx2,2)
+							rrz=atom(nni,3)-atom(nx2,3)
+							rr=rrx*rrx+rry*rry+rrz*rrz
 	
-	if(rr.gt.2.5)then
-	   ichg=ichg+1
-      nii=ii
-	  njj1=nni
-	  else
-	endif
+							if(rr.gt.2.5)then
+							   	ichg=ichg+1
+						      	nii=ii
+							  	njj1=nni
+							else
+							endif
+						enddo
+	  					njj=nx
 
-enddo
-	  njj=nx
+				 		if(ichg.eq.2)then
+							if(nii.lt.nxx)then
+								mm1=-1
+							else
+								mm1=1
+							endif
 
-! write(2,*)'nx2=',nx2
+							do while(ichg.eq.2)
+								nii=nii+Mm1
+								 	  !if 3
+								if(nii.ge.1.and.nii.le.nnd)then 
+									nni=nchain(nnx,nii)
+									rrx=atom(nni,1)-atom(njj,1)
+									rry=atom(nni,2)-atom(njj,2)
+									rrz=atom(nni,3)-atom(njj,3)
+							 
+									rr=rrx*rrx+rry*rry+rrz*rrz
+									if(rr.gt.2.5)then
+								      	njj=njj1
+									  	njj1=nni
 
-!	mm1=0
-	 !do2
-  if(ichg.eq.2)then
-	 if(nii.lt.nxx)then
-	mm1=-1
-	else
-	mm1=1
-	endif
+							     	else
+									   	ichg=1
+								    	njj=njj1
+							   		endif
+							    else
+									ichg=1
+									njj=njj1
+								endif
+								ncc=ncc+1
+							enddo
+						else
+						endif ! end if ichg .eq.2
+						if(ichg.eq.1)then
+							de=0.
+						  	if(ncc.eq.1)then
+						    	ichanx=icha(nx)
+								ichanx2=icha(nx2)
+								do ii=1,18
+									iia=nna(nx,ii)
+									iib=nna(nx2,ii)
+									if(iia.ne.nx2)then   
+					 					ichaa=icha(iia)
+										de=de+eab(ICHANX2,ichaa)-eab(ichanx,ichaa)	!energy calculate
+									else
+									endif
 
-	 do while(ichg.eq.2)
-	nii=nii+Mm1
-	 	  !if 3
-	if(nii.ge.1.and.nii.le.nnd)then 
-		nni=nchain(nnx,nii)
-!		write(*,*)'ii,nni=',ii,nni
-		rrx=atom(nni,1)-atom(njj,1)
-		rry=atom(nni,2)-atom(njj,2)
-		rrz=atom(nni,3)-atom(njj,3)
- 
-	rr=rrx*rrx+rry*rry+rrz*rrz
-		if(rr.gt.2.5)then
-      njj=njj1
-	  njj1=nni
+									if(iib.ne.nx)then   
+							     	ichab=icha(iib)
+							 
+									de=de+eab(ichanx,ichab)-eab(ICHANX2,ichab) !	energy calculate
+									else
+									endif
+								enddo
+  								if(de.le.0)then
+									e=e+de	
+							   		icha(nx2)=ichanx
+							        icha(nx)=ICHANX2
+							 		nchain(nnx,nxx)=nx2
+							 		mc(nx2)=nnx
+							 		mw(nx2)=nxx
+							 		nempty(nny)=nx
+							  		mne(nx)=nny
+							   		ichap(nx2)=ichanx
+							   		ichap(nx)=ICHANX2
+							  		nmontes=nmontes+ncc
+						  		else
+		  							pp=exp(-de*cons)
+	   
+									if(pp.ge.ranf(idum))then
+										e=e+de	
+										icha(nx2)=ichanx
+										icha(nx)=ICHANX2
+										ichap(nx2)=ichanx
+									   	ichap(nx)=ICHANX2
+									 	nchain(nnx,nxx)=nx2
+									 	mc(nx2)=nnx
+									 	mw(nx2)=nxx
+									  	nempty(nny)=nx
+									  	mne(nx)=nny
+									 	nmontes=nmontes+1
 
-     	   else
-	   ichg=1
-    	njj=njj1
-      		endif
-    	else
-	ichg=1
-	njj=njj1
-        
-	endif
-!endif 3
-ncc=ncc+1
-	enddo
-else
-endif
-  !if2,enddo2
-!write(*,*)'jj=',jj,'nrrend=',nrrend,'nmontes=',nmontes,ncc,de
-	if(ichg.eq.1)then
-      !if 1
-	de=0.
-  if(ncc.eq.1)then
-    ichanx=icha(nx)
-ichanx2=icha(nx2)
-		do ii=1,18
-			iia=nna(nx,ii)
-			iib=nna(nx2,ii)
- 
+								    else 
+								    endif !enf if pp.ge.ranf(idum)
+								endif
+							else !	else ->ncc.eq.1
+								NCC1=NCC-1
+								NCC2=NCC+1
+								nx1=nx
+								ichnx1=ichap(nx1)
+								ichapp(1)=nx2
 
-			if(iia.ne.nx2)then   
-				 ichaa=icha(iia)
-    
-				de=de+eab(ICHANX2,ichaa)-eab(ichanx,ichaa)				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
-else
-endif
+								DO  JCC=2,NCC2
+									ichapp(jcc)=nx1
+									if(jcc.ne.ncc2)then
+										mmp=nxx+(jcc-1)*mm1
+										nx1=NCHAIN(NNX,mmP)
+									else
+									endif
+									enddo
+									DO JCC=1,NCC
+										jcc1=jcc+1
+										njcc=ichapp(jcc)
+										njcc1=ichapp(jcc1)
+										ichap(njcc)=icha(njcc1)
+									enddo
+									ichap(ichapp(ncc2))=ICHA(NX2)
+									DO  JCC=1,NCC
+										jcc1=jcc+1
+										njcc=ichapp(jcc)
+										njcc1=ichapp(jcc1)
+										de=de-eab(ichAP(NJCC),ichAP(NJCC1))+eab(ichA(NJCC),ichA(NJCC1))				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
+									ENDDO
 
-if(iib.ne.nx)then   
-     ichab=icha(iib)
- 
-de=de+eab(ichanx,ichab)-eab(ICHANX2,ichab)			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
-else
-endif
-enddo
-!if 0
-  if(de.le.0)then
-  	
-		 e=e+de	
+									DO JCC=1,NCC2
+										nccp=ichapp(jcc)
+										ichnccp=icha(nccp)
+										ichncc=ichap(nccp)
+										do  ii=1,18
+										  	iia=nna(nccp,ii)	!; write(100,*)nccp,ii,iia
+										   	ichaap=icha(iia)   
+										    ichaa=ichap(iia)  ! ; write(100,*)ichncc,ichaa,ichnccp,ichaap
+											de=de+eab(ichncc,ichaa)-eab(ichnccp,ichaap)								!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
+										enddo
+									enddo
 
-	   icha(nx2)=ichanx
-	        icha(nx)=ICHANX2
-	 nchain(nnx,nxx)=nx2
-	 mc(nx2)=nnx
-	 mw(nx2)=nxx
-	 nempty(nny)=nx
-	  mne(nx)=nny
-	   ichap(nx2)=ichanx
-	   ichap(nx)=ICHANX2
+									DO JCC=1,NCC
+										nccp=ichapp(jcc)
+										do  ii=1,18
+										  	iia=nna(nccp,ii)
+											DO IIP=JCC+2,NCC2
+										  		NCCPP=ichapp(IIP)
+										   		IF(IIA.EQ.NCCPP)THEN	
+										   			de=de-eab(ichAP(NCCP),ichAP(NCCPP))+Eab(ichA(NCCP),ichA(NCCPP))				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
+										   		ELSE
+									   			ENDIF
+									   		ENDDO
+										ENDDO
+									ENDDO
 
-	  nmontes=nmontes+ncc
-	  else
-	  pp=exp(-de*cons)
-   
-	 if(pp.ge.ranf(idum))then
-	  e=e+de	
+									if(de.le.0)then
+									   e=e+de	
+										DO  JCC=1,NCC
+											nccp=ichapp(jcc)
+											icha(nccp)=ichap(nccp)
+											mmp=nxx+(jcc-1)*mm1
+											nchain(nnx,mmp)=nccp
+											mc(nccp)=nnx
+											mw(nccp)=mmp
+										enddo
+										nccp=ichapp(ncc2)
+										icha(nccp)=ichap(nccp)
+										nempty(nny)=nccp
+										mne(nccp)=nny
+		  								nmontes=nmontes+1
+								  	else
+									  	pp=exp(-de*cons)
+								 		if(pp.gt.ranf(idum))then
+								   			e=e+de	
+											DO  JCC=1,NCC
+												nccp=ichapp(jcc)
+												icha(nccp)=ichap(nccp)
+												mmp=nxx+(jcc-1)*mm1
+												nchain(nnx,mmp)=nccp
+												mc(nccp)=nnx
+												mw(nccp)=mmp
+											enddo
+											nccp=ichapp(ncc2)
+											icha(nccp)=ichap(nccp)
+											nempty(nny)=nccp
+											mne(nccp)=nny
+										   	nmontes=nmontes+1
+	    								else
+											DO  JCC=1,NCC2
+												njcc=ichapp(jcc)
+												ichap(njcc)=icha(njcc)
+											enddo
+	    								endif
+									endif
+								continue
 
-	 icha(nx2)=ichanx
-	        icha(nx)=ICHANX2
-        
-		ichap(nx2)=ichanx
-	   ichap(nx)=ICHANX2
-	 nchain(nnx,nxx)=nx2
-	 mc(nx2)=nnx
-	 mw(nx2)=nxx
-	  nempty(nny)=nx
-	 
-	  mne(nx)=nny
-	 
-
-	  nmontes=nmontes+1
-
-    else
-    endif
-endif
-!endif0
-
-else 
-!go to 1234
-!write(*,*)'jj=',jj,'nrrend=',nrrend,'nmontes=',nmontes,ncc,de
-NCC1=NCC-1
-NCC2=NCC+1
-nx1=nx
-ichnx1=ichap(nx1)
-ichapp(1)=nx2
-
- DO  JCC=2,NCC2
-ichapp(jcc)=nx1
-if(jcc.ne.ncc2)then
-mmp=nxx+(jcc-1)*mm1
- nx1=NCHAIN(NNX,mmP)
-
-else
-endif
-enddo
-
- DO JCC=1,NCC
- jcc1=jcc+1
-njcc=ichapp(jcc)
-njcc1=ichapp(jcc1)
-ichap(njcc)=icha(njcc1)
-enddo
-
-ichap(ichapp(ncc2))=ICHA(NX2)
-DO  JCC=1,NCC
- jcc1=jcc+1
-njcc=ichapp(jcc)
-njcc1=ichapp(jcc1)
-de=de-eab(ichAP(NJCC),ichAP(NJCC1))+eab(ichA(NJCC),ichA(NJCC1))				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
-  ENDDO
-
-DO JCC=1,NCC2
-nccp=ichapp(jcc)
-ichnccp=icha(nccp)
-ichncc=ichap(nccp)
-do  ii=1,18
-  iia=nna(nccp,ii)	!; write(100,*)nccp,ii,iia
-   ichaap=icha(iia)   
-    ichaa=ichap(iia)  ! ; write(100,*)ichncc,ichaa,ichnccp,ichaap
-de=de+eab(ichncc,ichaa)-eab(ichnccp,ichaap)								!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
-enddo
-
-enddo
-
-DO JCC=1,NCC
-nccp=ichapp(jcc)
-do  ii=1,18
-  iia=nna(nccp,ii)
-DO IIP=JCC+2,NCC2
-  NCCPP=ichapp(IIP)
-   IF(IIA.EQ.NCCPP)THEN	
-   de=de-eab(ichAP(NCCP),ichAP(NCCPP))+Eab(ichA(NCCP),ichA(NCCPP))				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!			energy calculate
-   ELSE
-   ENDIF
-   ENDDO
-ENDDO
-ENDDO
-
- 
-
-!if 00
-  if(de.le.0)then
- 
-   e=e+de	
-
-DO  JCC=1,NCC
-nccp=ichapp(jcc)
-icha(nccp)=ichap(nccp)
-mmp=nxx+(jcc-1)*mm1
-nchain(nnx,mmp)=nccp
-mc(nccp)=nnx
-mw(nccp)=mmp
-enddo
-nccp=ichapp(ncc2)
-icha(nccp)=ichap(nccp)
-!!!!!!!!!!!!!!!!
-nempty(nny)=nccp
-	  mne(nccp)=nny
-
-!!!!!!!!!!!!!!!!!!!
-	  nmontes=nmontes+1
-
-	  else
-	  pp=exp(-de*cons)
- 
-
-	 if(pp.gt.ranf(idum))then
-	    e=e+de	
-
-		DO  JCC=1,NCC
-nccp=ichapp(jcc)
-icha(nccp)=ichap(nccp)
-mmp=nxx+(jcc-1)*mm1
-nchain(nnx,mmp)=nccp
-mc(nccp)=nnx
-mw(nccp)=mmp
-enddo
-nccp=ichapp(ncc2)
-icha(nccp)=ichap(nccp)
-nempty(nny)=nccp
-	  mne(nccp)=nny
-
-
-	   nmontes=nmontes+1
-
-
-    else
- DO  JCC=1,NCC2
-njcc=ichapp(jcc)
-ichap(njcc)=icha(njcc)
-enddo
-!write(*,*)'jj=',jj,'nrrend=',nrrend,'nmontes=',nmontes,ncc,de
-    endif
- 
-endif
-!endif00
-1234  continue
-
-endif
+							endif
 	
-else
-endif
-!endif2
-!write(*,*)'jj=',jj,'nrrend=',nrrend,'nmontes=',nmontes,ncc,de
+						else
+						endif
 
-else
-endif	
-
-	!!End Chain movement
+					else
+					endif	
 		
-!-------------------------------------	
-
-
-		
-		
+!-------------------------------------			
 !---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-else if (randNum.ge.0.50.and.randNum.lt.1.0)then 
-		! solvent movement
-		    ncc=1
-			
-         nny=INT(1.0+ntote*ranf(idum))
-		  nx2=nempty(nny)
-		 
-		  nx1=int(1.0+18*ranf(idum))
-		  nx=nna(nx2,nx1)
+				else if (randNum.ge.0.50.and.randNum.lt.1.0)then 
+					! solvent movement
+		   			ncc=1
+		         	nny=INT(1.0+ntote*ranf(idum))
+				  	nx2=nempty(nny)
+				  	nx1=int(1.0+18*ranf(idum))
+				  	nx=nna(nx2,nx1)
+ 
+ 					if(icha(nx).lt.3)then
+			  		  	nnx=mc(nx)
+					  	nxx=mw(nx)
+  						ichg=1
 
- 
- 
-  if(icha(nx).lt.3)then
-!	write(*,*) 'begin solvent movement'
-  		  nnx=mc(nx)
-		  nxx=mw(nx)
-
- 
-
-  ichg=1
-!write(*,*)'nmontes=',nmontes,nxx,nx,nx1,nx2
-   if (nxx-1.eq.0)then
-   nstar=nxx+1
-    nend=nstar
-      else if(nxx.eq.nnd)then
-   nstar=nxx-1
-    nend=nstar
-   
-   else
-   nstar=nxx-1
-    nend=nxx+1
-   endif
- 
+					   	if (nxx-1.eq.0)then
+						   	nstar=nxx+1
+						    nend=nstar
+						else if(nxx.eq.nnd)then
+						   	nstar=nxx-1
+						    nend=nstar
+					   	else
+						   	nstar=nxx-1
+						    nend=nxx+1
+					   	endif
+					 
 	do 10 ii=nstar,nend,nnum
 
 	nni=nchain(nnx,ii)
