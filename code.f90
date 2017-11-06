@@ -8,12 +8,12 @@ module globalparameters
 	integer,parameter:: dble_real = SELECTED_REAL_KIND(8)
 	integer(kind=8)::i,j,k
 	real(kind=8),parameter::g_concentration = 0.600
-	real(kind=4),parameter::g_cylinder_r0 = 12.0,g_wall_width = 2.0
+	real(kind=4),parameter::g_cylinder_r0 = 6.0,g_wall_width = 3.0
 	integer,parameter::g_len_ASegment = 10,g_len_BSegment = 2
-	real(kind=8),parameter::g_eas = -1.0,g_eaw = -1.0,g_ebs = 1.0,g_ebw= 1.0
+	real(kind=8),parameter::g_eas = -0.5,g_eaw = -3.0,g_ebs = 0.5,g_ebw= 3.0
 	real(kind=8),parameter::g_init_temp = 30
 	integer(kind=4),parameter::g_annealing_steps = 60
-	integer(kind=8),parameter::g_standard_MCS = 5 !5000
+	integer(kind=8),parameter::g_standard_MCS = 2 !5000
 
 	integer(kind=4),parameter::g_lx = 60, g_ly = 60, g_lz = 60
 	integer(kind=4),parameter::g_lxyz = g_lx*g_ly*g_lz
@@ -44,7 +44,7 @@ program main
 	real(kind=8)::ranf	
 
 	call cpu_time(time_tic)
-	iseed = -191
+	iseed = -77
 	eas = g_eas
 	eaw = g_eaw
 	ebs = g_ebs
@@ -63,6 +63,8 @@ program main
 	call AB_diblock_copolymer_init(len_ASegment,len_BSegment)
 	print*,'config_e after arrange chains:',configE_calculating()
 
+	call export2cc1_Figure(0)
+
 	call chains_remove_pro(len_ASegment,len_BSegment,concentration)
 	config_e = configE_calculating()
 	init_config_e = configE_calculating()
@@ -80,6 +82,10 @@ program main
 	print*,'The total time on the program main:',time_toc1- time_tic
 	stop "end and exit"
 end program main
+!_____________________________________________________________________________________________
+!_____________________________________________________________________________________________
+!_____________________________________________________________________________________________
+!_____________________________________________________________________________________________
 
 subroutine simulatedAnnealing_plan(init_config_e,init_temp,annealing_steps)
 	!	the plan of simulated Annealing
@@ -89,13 +95,14 @@ subroutine simulatedAnnealing_plan(init_config_e,init_temp,annealing_steps)
 	integer(kind=4),intent(in)::annealing_steps
 	integer(kind=4):: step
 	real(kind=8)::annealing_temp,annealing_factor
-	integer(kind=8)::mcs,order,standard_MCS,num_trial_steps,num_accepted_steps
+	integer(kind=8)::mcs,order,standard_MCS,loopNum,num_trial_steps,num_accepted_steps
 	real(kind=8)::configE_average_before,configE_average_current,ep
 	real(kind=8)::current_configE,changed_configE
 	real(kind=8)::configE_calculating
 
 	annealing_temp = init_temp
 	standard_MCS = g_standard_MCS
+	loopNum = g_num_atom
 	configE_average_before = 10000000.0
 	!___________________________________________
 	current_configE = init_config_e
@@ -119,7 +126,7 @@ subroutine simulatedAnnealing_plan(init_config_e,init_temp,annealing_steps)
 		g_sum_confe_PerTemper = 0.00
 
 		standard_MCS_loop:do mcs = 1, standard_MCS, 1
-			g_num_atom_loop:do order = 1, 2, 1
+			g_num_atom_loop:do order = 1, loopNum, 1
 
 				current_configE = g_config_e
 				call chains_reversing(annealing_factor,current_configE)
@@ -283,9 +290,8 @@ subroutine chains_snake(annealing_factor,init_config_e,concentration)
 	endif
 end subroutine chains_snake
 
-
-
-
+!_____________________________________________________________________________________________
+!_____________________________________________________________________________________________
 
 subroutine tempType_init()
 	!	the initialization of temporary array of particles type 
@@ -392,7 +398,7 @@ subroutine chains_remove_pro(len_ASegment,len_BSegment,concentration)
 			endif
 		end do inner
 	end do outer
-	print*,'end subroutine chains_remove_pro()'
+	print*,'end subroutine chains_remove_pro(), the g_num_chains:',g_num_chains
 end subroutine chains_remove_pro                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
 
 subroutine AB_diblock_copolymer_init(len_ASegment,len_BSegment)
@@ -755,8 +761,6 @@ subroutine figure(step)
 	use globalparameters
 	implicit none
 	integer(kind=4),intent(in)::step
-	!print*,'jello'
-
 end subroutine figure
 
 function configE_calculating()
@@ -819,7 +823,37 @@ function ranf()
 	    ranf=am*ior(iand(IM, ieor(ix,iy)),1)     
 end function ranf
 
+subroutine export2cc1_Figure(step)
+	use globalparameters
+	implicit none
+	integer, intent(in) :: step
+	integer(kind=4)::num_atom
+	character(len=256) :: esti_morph,temp_Char
+	if ( step .lt.10 ) then
+		write(temp_Char,'(I1)')step
+	else if ( step .ge. 10 .and. step .lt. 100 ) then
+		write(temp_Char, '(I2)')step
+	else
+	endif
+		
+	write(esti_morph,*)'morph_',trim(temp_Char),'.cc1'
 
+	open(unit = 2,file = esti_morph)
+	num_atom = (g_len_ASegment + g_len_BSegment)*g_num_chains
+	j = 0
+	write(2,*)num_atom
+	do i = 1, g_num_atom, 1
+		if ( icha(i).eq.g_typeA ) then
+			j = j + 1
+			write(2,*)'Na',j,atom(i,1),atom(i,2),atom(i,3),190
+		else if ( icha(i).eq.g_typeB ) then
+			j = j + 1
+			write(2,*)'Br',j,atom(i,1),atom(i,2),atom(i,3),110
+		else
+		endif
+	end do
+	close(3)
+end subroutine export2cc1_Figure
 
 
 !_____________________________________________________________________________________________

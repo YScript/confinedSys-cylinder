@@ -1,4 +1,4 @@
-            !   15%
+            !   60%
    Dimension atom(216000,3),as(216000,3),nna(216000,18),nn(216000),icha(216000),ichaP(216000)
 	   Dimension eab(4,4),nchain(3985,12),ichapp(13),nempty(216000),mc(216000),mw(216000),mne(216000)
 	  	  DOUBLE PRECISION E,EP,ep0,epp,de,randNum
@@ -33,7 +33,7 @@ double precision::concentration,r0,r1,dwall
 			llongth=2*r1+1
 			concentration=0.60
 		
-			nnstep=100000
+			nnstep=1
 		
 			idum = -77
 			ISEED= -67
@@ -337,10 +337,14 @@ e=0.
 	  endif
 	  ep0=epp
 EP=0.
-do 5002 ii02=1,nnstep
+do 5002 ii02=1,2
+! do 5002 ii02=1,nnstep
+
  nrrend=0
  nmontes=0
-do 5003 ii03=1,ntot  	 
+do 5003 ii03=1,2
+! do 5003 ii03=1,ntot  	 
+
 	 cons=1./cons1
 	 	!do while1
 !	do while (nrrend.lt.nrrend0)
