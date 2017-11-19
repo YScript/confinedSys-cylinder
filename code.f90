@@ -78,6 +78,7 @@ program main
 	!	the following partion is the simulated Annealing partion    !
 	print*,'_____________________________________________________________________________________________'
 	call simulatedAnnealing_plan(init_config_e,g_init_temp,g_annealing_steps)
+	
 	call cpu_time(time_toc1)
 	print*,'The total time on the program main:',time_toc1- time_tic
 	stop "end and exit"
@@ -111,6 +112,7 @@ subroutine simulatedAnnealing_plan(init_config_e,init_temp,annealing_steps)
 	configE_average_current = init_config_e
 	print*,'test floating-point exceptions'
 	
+	!-----------------------------------------main_annealing_plan------------------!
 	main_annealing_plan:do step = 1, annealing_steps, 1		
 		if ( (configE_average_before - configE_average_current) .gt. 500 ) then
 			annealing_temp = annealing_temp * 0.95
@@ -146,7 +148,7 @@ subroutine simulatedAnnealing_plan(init_config_e,init_temp,annealing_steps)
 		configE_average_current = g_sum_confe_PerTemper/(g_num_trial_steps)
 
  		write(*,*)step,g_num_accepted_steps,g_num_trial_steps,g_sum_var_e,g_config_e
-
+ 		
  		
 	end do	main_annealing_plan
 	print*,'last g_config_e',configE_calculating()
