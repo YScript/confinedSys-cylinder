@@ -15,10 +15,18 @@ def import_raw_datas(input_file):
 		The API
 		parameters list and chainOrder list~list;
 	"""
-	chain_info = []
+	old_chains_info = []
 	file = open(input_file)
 	parameters = file.readline()
 	parameter_list = parameters.split()
+	iter_numbers = 0
+	for lines in file.readlines():
+		chains = lines.split()
+		old_chains_info.append(chains)
+		iter_numbers = iter_numbers + 1
+		pass
+	print('the number of chains:',iter_numbers)
+	print(old_chains_info)
 	return parameter_list
 
 	

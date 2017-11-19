@@ -61,15 +61,15 @@ def dataImport(chainsFlie):
 	# the data read from the importfile is the type of "str" need to be translated as a "int" or "float" type.
 	iterNumber = 0
 	for lines in file.readlines():
-		chainDatas = lines.split()
-		newChainInfo.append(chainDatas)  #import the original datas into an list newChainInfo[];
+		chain_info = lines.split()
+		newChainInfo.append(chain_info)  #import the original datas into an list newChainInfo[];
 		iterNumber = iterNumber + 1
 		pass
 	if iterNumber != numOfChain:
 		print("error in read importFile" )
 		pass
 	file.close()
-	# print(len(chainDatas))
+	# print(len(chain_info))
 	return parameterList,newChainInfo
 
 def meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms):
