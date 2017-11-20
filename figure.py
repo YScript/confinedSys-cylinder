@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 import os
 
 chainsFlie = "newChainInfo.txt"
+info_raw_chain = "chain.txt"
 len_simuBox = 64
-height_simuBox = 64
+# height_simuBox = 64
 
 def builTheBox(len_simuBox,height_simuBox):
 	"""
@@ -71,6 +72,33 @@ def dataImport(chainsFlie):
 	file.close()
 	# print(len(chain_info))
 	return parameterList,newChainInfo
+
+def read_chainInfo_from_file(info_raw_chain):
+	"""
+		read the chains information from the raw chain producted by the .f90 procedure;
+		the info_raw_chain('chain.txt') does not have the format of 'one chain -- one line '
+		so it need to be import as one by one;
+	"""
+	old_chain_info = []
+	file = open(info_raw_chain)
+	parameters = file.readline()
+	parameterList = parameters.split()
+	# the parameterList: r0,height,concentration,len-ASegment,len-BSegment;
+	len_Asegment = int(parameterList[4])
+	len_Bsegment = int(parameterList[5])
+	len_copolymer = len_Asegment + len_Bsegment
+
+	
+	number_totalChains = int(parameterList[3])
+	for chain in range(number_totalChains):
+		for monomer in range(len_copolymer):
+			if monomer < len_Asegment:
+				pass
+			elif monomer < len_copolymer:
+				pass
+			else:
+				exit(1)
+	pass
 
 def meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms):
 	"""
@@ -163,6 +191,11 @@ def convert2CylidericalCoor():
 
 
 def period_Boundary_condition(value,period):
+	"""
+		the function of the period_Boundary_condition;
+		parameters: value--> the value needs to be judged;
+					period--> the period of one direction;
+	"""
 	half_period = int(period/2)
 	if value >half_period:
 		return value - period
@@ -182,11 +215,16 @@ def figures():
 	pass
 
 def main():
-	info_of_atoms = builTheBox(len_simuBox,height_simuBox)
+	"""
+		the main program
+	"""
 	parameterList,newChainInfo = dataImport(chainsFlie)
+	height_simuBox = int(parameterList[1])
+	# print(height_simuBox)
+	info_of_atoms = builTheBox(len_simuBox,height_simuBox)
+	# print(info_of_atoms)
 	chosenSegment_type = 2
 	meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms)
-
 	dataExport()
 	figures()
 	print("main function()")
