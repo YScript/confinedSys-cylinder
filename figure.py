@@ -70,7 +70,7 @@ def dataImport(chainsFlie):
 		print("error in read importFile" )
 		pass
 	file.close()
-	# print(len(chain_info))
+	print(len(chain_info),newChainInfo[-1])
 	return parameterList,newChainInfo
 
 def read_chainInfo_from_file(info_raw_chain):
@@ -88,7 +88,6 @@ def read_chainInfo_from_file(info_raw_chain):
 	len_Bsegment = int(parameterList[5])
 	len_copolymer = len_Asegment + len_Bsegment
 
-	
 	number_totalChains = int(parameterList[3])
 	for chain in range(number_totalChains):
 		for monomer in range(len_copolymer):

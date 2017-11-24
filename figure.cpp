@@ -37,10 +37,12 @@ int main(int argc, char const *argv[]){
 	int colorA = 110,colorB=190;
 
 	cout <<"line"<<endl;
-	
+	int number_of_bcp_import;
+
 	fin >>r0;
 	fin >>cylinderHeight;
 	fin >>concentration;
+	// fin >>number_of_bcp_import;
 	fin >>len_ASegment;
 	fin >>len_BSegment;
 	cout <<r0<<"\t"<<cylinderHeight<<"\t"<<concentration<<"\t"<<len_ASegment<<"\t"<<len_BSegment<<endl;
@@ -109,6 +111,11 @@ int main(int argc, char const *argv[]){
 
 	// read the datas from the inputfile;
 	int number_of_bcp = int(number_of_oldAtom*concentration/len_of_copolymer);
+	/*if (number_of_bcp != number_of_bcp_import)
+	{
+		cout <<"error"<<endl;
+		exit(1);
+	}*/
 	int **nchain = new int*[number_of_bcp];
 	for (int i = 0; i < number_of_bcp; ++i){
 		nchain[i] = new int [len_of_copolymer];
@@ -121,9 +128,11 @@ int main(int argc, char const *argv[]){
 	int id_of_chain;
 	for (int i = 0; i < number_of_bcp; ++i){
 		fin >>id_of_chain; // locate this codeline;
+		// id_of_chain--;
 		for (int j = 0; j < len_of_copolymer; ++j){
 			fin >>id_of_oldAtom;
-			nchain[i][j] = id_of_oldAtom -1;
+			id_of_oldAtom--;
+			nchain[i][j] = id_of_oldAtom;
 			if (j <len_ASegment){
 				old_atom[nchain[i][j]].name = "Na";
 				old_atom[nchain[i][j]].type = typeA;
@@ -138,12 +147,20 @@ int main(int argc, char const *argv[]){
 			z = old_atom[nchain[i][j]].z;
 			id_of_newAtom = int((x+lx/2)*ly*lz+ (y+ly/2)*lz + z);
 
-			atom[id_of_newAtom].name = old_atom[nchain[i][j]].name;
+			nchain[i][j] = id_of_newAtom;
+			atom[id_of_newAtom].name = old_atom[id_of_oldAtom].name;
+			atom[id_of_newAtom].x = old_atom[id_of_oldAtom].x;
+			atom[id_of_newAtom].y = old_atom[id_of_oldAtom].y;
+			atom[id_of_newAtom].z = old_atom[id_of_oldAtom].z;
+			atom[id_of_newAtom].type = old_atom[id_of_oldAtom].type;
+			atom[id_of_newAtom].color = old_atom[id_of_oldAtom].color;
+
+			/*atom[id_of_newAtom].name = old_atom[nchain[i][j]].name;
 			atom[id_of_newAtom].x = old_atom[nchain[i][j]].x;
 			atom[id_of_newAtom].y = old_atom[nchain[i][j]].y;
 			atom[id_of_newAtom].z = old_atom[nchain[i][j]].z;
 			atom[id_of_newAtom].type = old_atom[nchain[i][j]].type;
-			atom[id_of_newAtom].color = old_atom[nchain[i][j]].color;
+			atom[id_of_newAtom].color = old_atom[nchain[i][j]].color;*/
 		}
 	}
 	delete []old_box;
@@ -163,6 +180,7 @@ int main(int argc, char const *argv[]){
 	fo.open("Amorph.cc1");
 	fu.open("Bmorph.cc1");
 	ft.open("AB.cc1");
+	fp.open("newChainInfo.txt");
 	if (!(fo && fu && ft && fp)){
 		cout <<"error in open the output file:"<<endl;
 		exit(1);
@@ -194,6 +212,19 @@ int main(int argc, char const *argv[]){
 			counter++;
 			ft << atom[i].name<<"\t"<<counter<<"\t"<<atom[i].x<<"\t"<<atom[i].y<<"\t"<<atom[i].z<<"\t"<<atom[i].color<<endl;			
 		}
+	}
+
+	//fprintf(new chains information);
+	fp <<r0<<"\t"<<cylinderHeight<<"\t"<<concentration<<"\t"<<len_ASegment<<"\t"<<len_BSegment<<"\t"<<number_of_bcp<<endl;
+	cout <<"len_ASegment:"<<len_ASegment<<"len_BSegment:"<<len_BSegment<<endl;
+	for (int i = 0; i < number_of_bcp; ++i)
+	{
+		fp <<i;
+		for (int j = 0; j < len_of_copolymer; ++j)
+		{
+			fp <<"\t"<<nchain[i][j];
+		}
+		fp <<endl;
 	}
 	fo.close();
 	fu.close();
