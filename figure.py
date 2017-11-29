@@ -46,19 +46,8 @@ def dataImport(chainsFlie):
 	file = open(chainsFlie)
 	parameters = file.readline()
 	parameterList = parameters.split()
-	# confinedRadius = float(parameterList[0])
-	# confinedHeight = int(parameterList[1])
-	# polymerConcentration = float(parameterList[2])
-	# Asegment = int(parameterList[3])
-	# Bsegment = int(parameterList[4])
-	# lenOfPolymer = Asegment + Bsegment
-	# print(confinedRadius,confinedHeight,polymerConcentration,Asegment,Bsegment)
-	datas = file.readline()
-	dataList = datas.split()
-	numOfChain = int(dataList[-1])
-	parameterList.append(numOfChain)
+	numOfChain = int(parameterList[-1])
 	print("the number of polymer:",numOfChain)
-	print(parameterList)
 	# the data read from the importfile is the type of "str" need to be translated as a "int" or "float" type.
 	iterNumber = 0
 	for lines in file.readlines():
@@ -66,38 +55,39 @@ def dataImport(chainsFlie):
 		newChainInfo.append(chain_info)  #import the original datas into an list newChainInfo[];
 		iterNumber = iterNumber + 1
 		pass
+	# print(newChainInfo[0])
 	if iterNumber != numOfChain:
-		print("error in read importFile" )
+		print("error in read importFile",iterNumber,numOfChain )
 		pass
 	file.close()
 	print(len(chain_info),newChainInfo[-1])
 	return parameterList,newChainInfo
 
-def read_chainInfo_from_file(info_raw_chain):
-	"""
-		read the chains information from the raw chain producted by the .f90 procedure;
-		the info_raw_chain('chain.txt') does not have the format of 'one chain -- one line '
-		so it need to be import as one by one;
-	"""
-	old_chain_info = []
-	file = open(info_raw_chain)
-	parameters = file.readline()
-	parameterList = parameters.split()
-	# the parameterList: r0,height,concentration,len-ASegment,len-BSegment;
-	len_Asegment = int(parameterList[4])
-	len_Bsegment = int(parameterList[5])
-	len_copolymer = len_Asegment + len_Bsegment
+# def read_chainInfo_from_file(info_raw_chain):
+# 	"""
+# 		read the chains information from the raw chain producted by the .f90 procedure;
+# 		the info_raw_chain('chain.txt') does not have the format of 'one chain -- one line '
+# 		so it need to be import as one by one;
+# 	"""
+# 	old_chain_info = []
+# 	file = open(info_raw_chain)
+# 	parameters = file.readline()
+# 	parameterList = parameters.split()
+# 	# the parameterList: r0,height,concentration,len-ASegment,len-BSegment;
+# 	len_Asegment = int(parameterList[4])
+# 	len_Bsegment = int(parameterList[5])
+# 	len_copolymer = len_Asegment + len_Bsegment
 
-	number_totalChains = int(parameterList[3])
-	for chain in range(number_totalChains):
-		for monomer in range(len_copolymer):
-			if monomer < len_Asegment:
-				pass
-			elif monomer < len_copolymer:
-				pass
-			else:
-				exit(1)
-	pass
+# 	number_totalChains = int(parameterList[3])
+# 	for chain in range(number_totalChains):
+# 		for monomer in range(len_copolymer):
+# 			if monomer < len_Asegment:
+# 				pass
+# 			elif monomer < len_copolymer:
+# 				pass
+# 			else:
+# 				exit(1)
+# 	pass
 
 def meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms):
 	"""
@@ -105,17 +95,24 @@ def meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms):
 		the AB diblock copolymer chains,which Sol select A monomer;
 		just about the Rg2 and E-E2; 
 	"""
+	print(parameterList)
 	len_Asegment = int(parameterList[3])
 	len_Bsegment = int(parameterList[4])
 	lenOfPolymer = len_Asegment + len_Bsegment
 	# print(len_Asegment,len_Bsegment,lenOfPolymer)
 	# print(len(newChainInfo))
-	for x in range(0,len(newChainInfo)):
+	
+	# chain = newChainInfo[-1]
+	# for x in range(1,len(chain)):
+	# 	t = chain[x]
+	# 	print(t)
+	for chain in newChainInfo:
 		nct = 0
-		for y in newChainInfo[x]:
-			xi = info_of_atoms[int(y)][1]
-			yi = info_of_atoms[int(y)][2]
-			zi = info_of_atoms[int(y)][3]
+		for y in range(1,len(newChainInfo[x])):
+			atom_id = newChainInfo[x][y]
+			xi = info_of_atoms[int(atom_id)][1]
+			yi = info_of_atoms[int(atom_id)][2]
+			zi = info_of_atoms[int(atom_id)][3]
 			ids = xi*len_simuBox*len_simuBox + yi*len_simuBox + zi
 			# conform the data correctly;
 			if int(y) != ids:

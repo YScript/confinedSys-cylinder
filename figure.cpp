@@ -45,7 +45,6 @@ int main(int argc, char const *argv[]){
 	// fin >>number_of_bcp_import;
 	fin >>len_ASegment;
 	fin >>len_BSegment;
-	cout <<r0<<"\t"<<cylinderHeight<<"\t"<<concentration<<"\t"<<len_ASegment<<"\t"<<len_BSegment<<endl;
 
 	int len_of_copolymer = len_ASegment + len_BSegment;
 	int lx = cylinderHeight;
@@ -216,6 +215,8 @@ int main(int argc, char const *argv[]){
 
 	//fprintf(new chains information);
 	fp <<r0<<"\t"<<cylinderHeight<<"\t"<<concentration<<"\t"<<len_ASegment<<"\t"<<len_BSegment<<"\t"<<number_of_bcp<<endl;
+	cout <<r0<<"\t"<<cylinderHeight<<"\t"<<concentration<<"\t"<<len_ASegment<<"\t"<<len_BSegment<<"\t"<<number_of_bcp<<endl;
+	
 	cout <<"len_ASegment:"<<len_ASegment<<"len_BSegment:"<<len_BSegment<<endl;
 	for (int i = 0; i < number_of_bcp; ++i)
 	{
