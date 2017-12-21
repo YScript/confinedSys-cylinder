@@ -1,9 +1,8 @@
 program main
 
-	implicit none
-	
+	real:: a
 	call subprog_1()
-
+	write(*,*)a
 
 end program main
 
@@ -19,6 +18,6 @@ end subroutine subprog_1
 subroutine subprog_1_1()
 	implicit none
 	print*,'hello world'
-	print*,a
+! 	print*,a
 
 end subroutine subprog_1_1

@@ -6,17 +6,17 @@ import matplotlib.pyplot as plt
 import os
 
 chainsFlie = "newChainInfo.txt"
-info_raw_chain = "chain.txt"
 len_simuBox = 64
+maxLen_neigh = 2.5;
 # height_simuBox = 64
 
 def builTheBox(len_simuBox,height_simuBox):
 	"""
 		the function make that building a simulation box 
-		and return the API : info_of_atoms which has record the information of all of atoms;
+		and return the API : lst_atomInfo which has record the information of all of atoms;
 	"""
 	number_totalAtoms = len_simuBox*len_simuBox*height_simuBox
-	info_of_atoms = []
+	lst_atomInfo = []
 	iterNumber = 0
 	singleAtom = ["Sol",0,0,0,0]
 	for x in range(0,len_simuBox):
@@ -29,11 +29,11 @@ def builTheBox(len_simuBox,height_simuBox):
 				# singleAtom[4] = 0
 				singleAtom = ["Sol",x,y,z,0]
 				iterNumber = iterNumber + 1
-				info_of_atoms.append(singleAtom)			
+				lst_atomInfo.append(singleAtom)			
 	if iterNumber != number_totalAtoms:
 		print("an error happens in the function of builTheBox")
 	print("the total atom number:",number_totalAtoms)
-	return info_of_atoms
+	return lst_atomInfo
 
 def dataImport(chainsFlie): 
 	"""
@@ -41,8 +41,9 @@ def dataImport(chainsFlie):
 		which has recorded the chains' information about ,chainId and the site coordinates;
 		The API
 		parameters list and chainOrder list~list;
+		but finding the time is to much;
 	"""
-	newChainInfo = []
+	list_newChainsInfo = []
 	file = open(chainsFlie)
 	parameters = file.readline()
 	parameterList = parameters.split()
@@ -52,44 +53,18 @@ def dataImport(chainsFlie):
 	iterNumber = 0
 	for lines in file.readlines():
 		chain_info = lines.split()
-		newChainInfo.append(chain_info)  #import the original datas into an list newChainInfo[];
+		list_newChainsInfo.append(chain_info)  #import the original datas into an list list_newChainsInfo[];
 		iterNumber = iterNumber + 1
 		pass
-	# print(newChainInfo[0])
+	# print(list_newChainsInfo[0])
 	if iterNumber != numOfChain:
 		print("error in read importFile",iterNumber,numOfChain )
 		pass
 	file.close()
-	print(len(chain_info),newChainInfo[-1])
-	return parameterList,newChainInfo
+	print(len(chain_info),list_newChainsInfo[-1])
+	return parameterList,list_newChainsInfo
 
-# def read_chainInfo_from_file(info_raw_chain):
-# 	"""
-# 		read the chains information from the raw chain producted by the .f90 procedure;
-# 		the info_raw_chain('chain.txt') does not have the format of 'one chain -- one line '
-# 		so it need to be import as one by one;
-# 	"""
-# 	old_chain_info = []
-# 	file = open(info_raw_chain)
-# 	parameters = file.readline()
-# 	parameterList = parameters.split()
-# 	# the parameterList: r0,height,concentration,len-ASegment,len-BSegment;
-# 	len_Asegment = int(parameterList[4])
-# 	len_Bsegment = int(parameterList[5])
-# 	len_copolymer = len_Asegment + len_Bsegment
-
-# 	number_totalChains = int(parameterList[3])
-# 	for chain in range(number_totalChains):
-# 		for monomer in range(len_copolymer):
-# 			if monomer < len_Asegment:
-# 				pass
-# 			elif monomer < len_copolymer:
-# 				pass
-# 			else:
-# 				exit(1)
-# 	pass
-
-def meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms):
+def meanSquareRee2andRg2(parameterList,list_newChainsInfo,lst_atomInfo):
 	"""
 		this function is used to handle and calculate the properities of 
 		the AB diblock copolymer chains,which Sol select A monomer;
@@ -100,19 +75,19 @@ def meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms):
 	len_Bsegment = int(parameterList[4])
 	lenOfPolymer = len_Asegment + len_Bsegment
 	# print(len_Asegment,len_Bsegment,lenOfPolymer)
-	# print(len(newChainInfo))
+	# print(len(list_newChainsInfo))
 	
-	# chain = newChainInfo[-1]
+	# chain = list_newChainsInfo[-1]
 	# for x in range(1,len(chain)):
 	# 	t = chain[x]
 	# 	print(t)
-	for chain in newChainInfo:
+	for chain in list_newChainsInfo:
 		nct = 0
-		for y in range(1,len(newChainInfo[x])):
-			atom_id = newChainInfo[x][y]
-			xi = info_of_atoms[int(atom_id)][1]
-			yi = info_of_atoms[int(atom_id)][2]
-			zi = info_of_atoms[int(atom_id)][3]
+		for y in range(1,len(list_newChainsInfo[x])):
+			atom_id = list_newChainsInfo[x][y]
+			xi = lst_atomInfo[int(atom_id)][1]
+			yi = lst_atomInfo[int(atom_id)][2]
+			zi = lst_atomInfo[int(atom_id)][3]
 			ids = xi*len_simuBox*len_simuBox + yi*len_simuBox + zi
 			# conform the data correctly;
 			if int(y) != ids:
@@ -126,20 +101,20 @@ def meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms):
 				atom_name = "B"
 				atom_type = 110
 			nct = nct + 1
-			info_of_atoms[int(y)][0] = atom_name
-			info_of_atoms[int(y)][-1] = atom_type
+			lst_atomInfo[int(y)][0] = atom_name
+			lst_atomInfo[int(y)][-1] = atom_type
 		pass
-		if nct != len(newChainInfo[x]):
+		if nct != len(list_newChainsInfo[x]):
 			print("error in for loop of function meanSquareRee2andRg2")
-	nct = nct *len(newChainInfo)	
+	nct = nct *len(list_newChainsInfo)	
 	print("number of atoms:",nct)
 	# check the data correctly;
 	num_A =0
 	num_B = 0
-	for x in range(len(info_of_atoms)):
-		if info_of_atoms[x][-1] == 190:	
+	for x in range(len(lst_atomInfo)):
+		if lst_atomInfo[x][-1] == 190:	
 			num_A = num_A + 1
-		elif info_of_atoms[x][-1] == 110:
+		elif lst_atomInfo[x][-1] == 110:
 			num_B = num_B + 1
 		pass
 	if (num_A+num_B) != nct:
@@ -148,12 +123,12 @@ def meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms):
 	EE2 = []
 	Rg2 = []
 	height_simuBox = int(parameterList[1])
-	for chain in newChainInfo:
+	for chain in list_newChainsInfo:
 		start_monomer = int(chain[len_Asegment])
 		end_monomer = int(chain[-1])
-		rx = info_of_atoms[start_monomer][1]-info_of_atoms[end_monomer][1]
-		ry = info_of_atoms[start_monomer][2]-info_of_atoms[end_monomer][2]
-		rz = info_of_atoms[start_monomer][3]-info_of_atoms[end_monomer][3]
+		rx = lst_atomInfo[start_monomer][1]-lst_atomInfo[end_monomer][1]
+		ry = lst_atomInfo[start_monomer][2]-lst_atomInfo[end_monomer][2]
+		rz = lst_atomInfo[start_monomer][3]-lst_atomInfo[end_monomer][3]
 		rz = period_Boundary_condition(rz,height_simuBox)
 		rr2 = rx*rx + ry*ry + rz*rz
 		EE2.append(rr2)
@@ -161,13 +136,13 @@ def meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms):
 	print(EE2)
 	meanSquareRee2 = float(sum(EE2)/len(EE2))
 	#  program for calculating the meanSquareRg2
-	for chain in newChainInfo:
+	for chain in list_newChainsInfo:
 		vector_r2 =[]
 		for current_monomer in chain[len_Asegment:]:
 			for next_monomer in chain[len_Asegment:]:
-				rx = info_of_atoms[int(current_monomer)][1]-info_of_atoms[int(next_monomer)][1]
-				ry = info_of_atoms[int(current_monomer)][2]-info_of_atoms[int(next_monomer)][2]
-				rz = info_of_atoms[int(current_monomer)][3]-info_of_atoms[int(next_monomer)][3]
+				rx = lst_atomInfo[int(current_monomer)][1]-lst_atomInfo[int(next_monomer)][1]
+				ry = lst_atomInfo[int(current_monomer)][2]-lst_atomInfo[int(next_monomer)][2]
+				rz = lst_atomInfo[int(current_monomer)][3]-lst_atomInfo[int(next_monomer)][3]
 				rz = period_Boundary_condition(rz,height_simuBox)
 				rr2 = rx*rx + ry*ry + rz*rz
 				vector_r2.append(rr2)
@@ -185,20 +160,62 @@ def meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms):
 def convert2CylidericalCoor():
 	pass
 
+def build_neighbours_list(lst_atomInfo):
+	lst_neighbours = []
+	coor  = [];
+	near_coor = []
+	for x in range(-1,2,1):
+		for y in range(-1,2,1):
+			for z in range(-1,2,1):
+				rr = x**2 + y**2 + z**2
+				if rr <maxLen_neigh and rr >0:
+					coor = [x,y,z]
+					near_coor.append(coor)
+					pass
+	# print(len(near_coor),maxLen_neigh,near_coor)
+	print(lst_atomInfo[0])
+	# print(len(lst_atomInfo),64**3)
+	for atom in range(0,len(lst_atomInfo)):
+		single_neigh_info = []
+		for neigh in range(0,len(near_coor)):
+			x = lst_atomInfo[atom][1] + near_coor[neigh][0]
+			y = lst_atomInfo[atom][2] + near_coor[neigh][1]
+			z = lst_atomInfo[atom][3] + near_coor[neigh][2]
+			x = period_Boundary_condition(x,len_simuBox,0)
+			y = period_Boundary_condition(y,len_simuBox,0)
+			z = period_Boundary_condition(z,len_simuBox,0)
+			id = len_simuBox**2 *x + len_simuBox*y + z
 
-def period_Boundary_condition(value,period):
+			single_neigh_info.append([neigh,id])
+			pass
+		lst_neighbours.append([atom,single_neigh_info])
+		pass
+	print(lst_neighbours[0])
+def period_Boundary_condition(value,period,boundary_judgment):
 	"""
 		the function of the period_Boundary_condition;
 		parameters: value--> the value needs to be judged;
 					period--> the period of one direction;
+					boundary_judgment --> the judgment for which condition;
+						0 >> boundary: like neighbour;
+						others >> distance calculating
 	"""
 	half_period = int(period/2)
-	if value >half_period:
+	if boundary_judgment == 0:
+		boundary_upper_plus = period
+		boundary_down_plus = 0
+	else :
+		boundary_upper_plus = half_period
+		boundary_down_plus = -half_period
+		pass
+
+	if value > boundary_upper_plus:
 		return value - period
-	elif value <= -half_period:
+	elif value < boundary_down_plus:
 		return value + period
 	else:
 		return value
+
 def dataExport():
 	rg2 = []
 	rg2_sum = 0
@@ -214,14 +231,15 @@ def main():
 	"""
 		the main program
 	"""
-	parameterList,newChainInfo = dataImport(chainsFlie)
+	parameterList,list_newChainsInfo = dataImport(chainsFlie)
 	height_simuBox = int(parameterList[1])
 	# print(height_simuBox)
-	info_of_atoms = builTheBox(len_simuBox,height_simuBox)
-	# print(info_of_atoms)
+	lst_atomInfo = builTheBox(len_simuBox,height_simuBox)
+	# print(lst_atomInfo)
 	chosenSegment_type = 2
-	meanSquareRee2andRg2(parameterList,newChainInfo,info_of_atoms)
+	# meanSquareRee2andRg2(parameterList,list_newChainsInfo,lst_atomInfo)
 	dataExport()
+	# build_neighbours_list(lst_atomInfo)
 	figures()
 	print("main function()")
 	pass

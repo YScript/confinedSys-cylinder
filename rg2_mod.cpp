@@ -129,8 +129,7 @@ int main(int argc, char const *argv[])
         criterion = true;	
     	id_chain = i + number_ghp;
 
-        for (int j = 0; j < len_fa; ++j)
-        {
+        for (int j = 0; j < len_fa; ++j){
     	    id_atom = nchain[id_chain][j];
             vartest = atom[id_atom].z;           
             criterion = criterion&&(vartest<=zc && vartest >0);
@@ -138,8 +137,7 @@ int main(int argc, char const *argv[])
         if(criterion){
     		bcp_surf[ncount] = id_chain;    //record the id of chain bcp_surf;
     		ncount ++;
-    	}
-        else{
+    	}else{
             bcp_sol[nct] = id_chain;		//record the id of chain bcp_sol;
             nct ++;
         }
@@ -313,4 +311,10 @@ int distance_r1_r2(int x1,int y1,int z1,int x2,int y2,int z2,int l){
 	return rr2;
 }
 
-
+int Adensity_z_dir(){
+	/*
+		the subfunction aims to export the data of The Density Distribution of A monomor in Z direction;
+		The A monomer identify to class the grafted chain or the free bcp_surf;
+	 */
+	
+}
