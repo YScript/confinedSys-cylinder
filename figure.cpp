@@ -57,7 +57,6 @@ int main(int argc, char const *argv[]){
 	fin >>r0;
 	fin >>cylinderHeight;
 	fin >>concentration;
-	// fin >>number_of_bcp_import;// the new importfile have the code in this line;
 	fin >>len_ASegment;
 	fin >>len_BSegment;
 
@@ -419,7 +418,7 @@ int radialDensity(struct coor_property *atom,struct para parameters){
 		iterNum += int(number_in_unit[i]);
 		newcounter += radialDensity[i]*number_in_unit[i];
 		// cout <<(i+1)*parameters.deta_r <<"\t"<<number_in_unit[i]<<"\t"<<radialDensity[i]<<endl;
-		fdenity <<(i*parameters.deta_r+(i+1)*parameters.deta_r)/2 <<"\t"<<number_in_unit[i]<<"\t"<<radialDensity[i]<<endl;
+		fdenity <<(i+1)*parameters.deta_r <<"\t"<<number_in_unit[i]<<"\t"<<radialDensity[i]<<endl;
 	}
 	if (newcounter != number_of_BMonomer)
 	{

@@ -1,6 +1,6 @@
 #! /usr/bin/env/python
 #encoding = utf-8
-
+from __future__ import division
 import matplotlib.pyplot as plt
 
 importfile = "newChainInfo.txt"
@@ -31,7 +31,7 @@ def data_import(rawfile):
 	parameters_line = file.readline()
 	lst_parameters = parameters_line.strip("\n").split(',')
 	iterNum = 0
-	numOfChain = int(lst_parameters[-2])
+	numOfChain = int(lst_parameters[-3])
 	for line in file.readlines():
 		line = line.strip('\n')
 		lst_chainInfo.append(line.split(','))
@@ -61,6 +61,34 @@ def dataAnalysis(parameterList,newChainInfo,info_of_atoms):
 def chainRg2_cal(lst_parameters,lst_atomInfo,lst_chainInfo):
 	pass
 
+def chainRee2_cal(lst_parameters,lst_atomInfo,lst_chainInfo):
+	for chain in lst_chainInfo:
+		dis_end2end = distance(coor1,coor2,len_period)
+	pass
+
+def distance(coor1,coor2,len_period):
+	'''
+		period boundary condition of z direction;\
+		coor1 & coor2 is the list of coordinates of two atoms;
+		the 3th arguments is the length of period for z direction;
+	'''
+	x = coor1[0] - coor2[0]
+	y = coor1[1] - coor2[1]
+	z = coor1[2] - coor2[2]
+	# if x > len_period /2:
+	# 	x =  len_period - x
+	# elif x < -len_period/2:
+	# 	x =  len_period + x
+	# if y >len_period/2:
+	# 	y = len_period -x 
+	# elif y < -len_period/2:
+	# 	y = len_period + x
+	if z > len_period/2:
+		z = len_period - z
+	elif z < -(len_period/2):
+		z = len_period + z
+	return x**2 + y **2 + z**2
+
 def plotMayaVi():
 	'''
 		plot the figure of MayaVi
@@ -78,10 +106,10 @@ def plotChem3D():
 	pass
 
 def main():
-	lst_parameters,lst_chains = data_import(importfile)
+	lst_parameters,lst_chainInfo = data_import(importfile)
 	lst_atomInfo = Box_building(int(lst_parameters[1]))
 	print(lst_parameters)
-	print(lst_chains[0])
+	print(lst_chainInfo[0])
 	plotMayaVi()
 	plotChem3D()
 
